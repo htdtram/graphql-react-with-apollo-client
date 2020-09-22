@@ -1,26 +1,19 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { Component } from 'react';
 import './App.css';
+import ApiAxios from './ApiAxios';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+const TITLE = 'React with GraphQL';
+
+export default class App extends Component {
+  render() {
+    return (
+      <div className="App">
+        <header className="App-header">
+          <h1>{TITLE}</h1>
+          <ApiAxios/>
+        </header>
+      </div>
+    );
+  }
 }
 
-export default App;
