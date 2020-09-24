@@ -16,6 +16,10 @@ const User = (props) => {
             ))
           }
         </ul>
+        {
+          props.author.posts.pageInfo.hasNextPage && 
+          <button id='btn-load-more' onClick={props.onClickLoadMorePost}>Load More</button>
+        }
       </div>
     </div>
   )

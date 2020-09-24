@@ -25,7 +25,7 @@ const axiosGraphQL = axios.create({
 // }`
 
 const GET_POST  = `
-query getPost($idPost:ID!, $first: Int)
+query getPost($idPost:ID!, $first: Int, $endCursor: String)
 {
   post(id:$idPost){
     id
@@ -33,16 +33,54 @@ query getPost($idPost:ID!, $first: Int)
     description
     author{
       name
-      posts(first: $first){
+      posts(first: $first, after: $endCursor){
         nodes{
           id
           title
           description
         }
+        pageInfo{
+          endCursor
+          hasNextPage
+        }
       }
     }
   }
 }`
+
+const resolveQuery = (result) => state =>{
+  const {data, errors} = result.data;
+  // console.log(data.post.author.posts.pageInfo.endCursor)
+  if (!data || !state.data){
+    return { data, errors };
+  }
+  // console.log(state.data.post.author.posts.nodes)
+  const {nodes: oldPosts} = state.data.post.author.posts;
+  const {nodes: newPosts} = data.post.author.posts;
+  const updatePosts = [...oldPosts, ...newPosts];
+  // console.log(updatePosts)
+
+  return{
+    data:{
+      post:{
+        ...data.post,
+        author:{
+          ...data.post.author,
+          posts:{
+            nodes: updatePosts,
+            pageInfo: {
+              ...data.post.author.posts.pageInfo,
+            }
+          }
+        }
+      }
+    },
+    errors,
+  };
+  // console.log(data);
+  // return { data, errors };
+
+};
 
 
 export default class ApiAxios extends Component {
@@ -68,7 +106,7 @@ export default class ApiAxios extends Component {
     this.onFetchData(this.state.input);
   }
 
-  onFetchData = (input) => {
+  onFetchData = (input, endCursor=null) => {
     const [idPost, firstInput] = input.split('/');
     let first = parseInt(firstInput);
     // console.log(GET_POST(input));
@@ -77,14 +115,15 @@ export default class ApiAxios extends Component {
       .post('',
       {
         query: GET_POST,
-        variables: {idPost, first}
+        variables: {idPost, first, endCursor}
       })
       .then(result => {
+        this.setState(resolveQuery(result))
         // console.log(result.data);
-        this.setState(() => ({
-          data: result.data.data,
-          errors: result.data.errors,
-        }))
+        // this.setState(() => ({
+        //   data: result.data.data,
+        //   errors: result.data.errors,
+        // }))
         // console.log(this.state.post)
       });
   };
@@ -99,6 +138,12 @@ export default class ApiAxios extends Component {
     this.onFetchData(this.state.input);
   }
 
+  onClickLoadMorePost = event =>{
+    event.preventDefault();
+    this.onFetchData(this.state.input, this.state.data.post.author.posts.pageInfo.endCursor);
+    
+  }
+
 
   render() {
     const { input, data, errors } = this.state;
@@ -111,7 +156,7 @@ export default class ApiAxios extends Component {
             (
               <>
               <Post post={data.post}/>
-              <User author={data.post.author}/>
+              <User author={data.post.author} onClickLoadMorePost={this.onClickLoadMorePost}/>
               </>
             ) : 
             errors? 
