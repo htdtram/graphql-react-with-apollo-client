@@ -1,87 +1,127 @@
 import React, { Component } from 'react';
 import axios from 'axios';
+import Post from './Post';
+import User from './User';
 
 const axiosGraphQL = axios.create({
   baseURL: 'http://graphql-base.herokuapp.com/graphql',
 })
 
-const GET_POST = (idPost) => `{
-  post(id:${idPost}){
+// const GET_POST = (idPost, first) => `{
+//   post(id:${idPost}){
+//     id
+//     title
+//     description
+//     author{
+//       name
+//       posts(first: ${first}){
+//         nodes{
+//           title
+//           description
+//         }
+//       }
+//     }
+//   }
+// }`
+
+const GET_POST  = `
+query getPost($idPost:ID!, $first: Int)
+{
+  post(id:$idPost){
     id
     title
     description
+    author{
+      name
+      posts(first: $first){
+        nodes{
+          id
+          title
+          description
+        }
+      }
+    }
   }
 }`
+
 
 export default class ApiAxios extends Component {
   // constructor(props) {
   //   super(props)
 
   //   this.state = {
-  //     idPost : '1',
+  //     input : '1',
   //     post: null,
   //     errors: null,
   //   }
-  //   this.onChangeIdPost = this.onChangeIdPost.bind(this);
+  //   this.onChangeinput = this.onChangeinput.bind(this);
   // }
 
   state = {
-    idPost: 1,
-    post: null,
+    input: '1/2',
+    data: null,
     errors: null,
   }
 
-  // componentDidMount() {
-  //   //fetch data
-  //   this.onFetchData(this.state.idPost);
-  // }
+  componentDidMount() {
+    //fetch data
+    this.onFetchData(this.state.input);
+  }
 
-  onFetchData = (idPost) => {
-    // console.log(GET_POST(idPost));
+  onFetchData = (input) => {
+    const [idPost, firstInput] = input.split('/');
+    let first = parseInt(firstInput);
+    // console.log(GET_POST(input));
     axiosGraphQL
-      .post('', { query: GET_POST(idPost) })
+      // .post('', { query: GET_POST(idPost, first) })
+      .post('',
+      {
+        query: GET_POST,
+        variables: {idPost, first}
+      })
       .then(result => {
         // console.log(result.data);
         this.setState(() => ({
-          post: result.data.data ? result.data.data.post : null,
+          data: result.data.data,
           errors: result.data.errors,
         }))
         // console.log(this.state.post)
       });
   };
 
-  onChangeIdPost =  event => {
+  onChangeinput =  event => {
     event.preventDefault();
-     this.setState({ idPost: event.target.value });
+     this.setState({ input: event.target.value });
   }
 
   onClickGetPost = event => {
     event.preventDefault();
-    this.onFetchData(this.state.idPost);
+    this.onFetchData(this.state.input);
   }
 
 
   render() {
-    const { idPost, post } = this.state;
+    const { input, data, errors } = this.state;
     return (
       <div>
-        <input id='idPost' type='text' value={idPost} onChange={this.onChangeIdPost} />
+        <input id='input' type='text' value={input} onChange={this.onChangeinput} />
           <button id='btnGetPost' onClick={this.onClickGetPost}>GET</button>
           {
-            post ? (<Post post={post} />) :
-              (<p>No information yet</p>)
+            data ? 
+            (
+              <>
+              <Post post={data.post}/>
+              <User author={data.post.author}/>
+              </>
+            ) : 
+            errors? 
+            (<p>
+              <strong>Something went wrong: </strong>
+              {errors.map(error => error.message).join(' ')}
+            </p>) : 
+            (<p>No information yet</p>)
           }
       </div>
     );
   }
 }
-
-const Post = ({ post }) => (
-  <div>
-    <br />
-    <h3>{post.title}</h3>
-    <p>
-      {post.description}
-    </p>
-  </div>
-);
