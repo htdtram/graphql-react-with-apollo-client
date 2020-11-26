@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import './App.css';
 import ApiAxios from './ApiAxios';
 import ApolloClientGraphQL from './ApolloClientGraphQL';
+import ApolloWithReact from './ApolloWithReact';
 
 const TITLE = 'React with GraphQL';
 
@@ -12,7 +13,8 @@ export default class App extends Component {
         <header className="App-header">
           {/* <h1>{TITLE}</h1> */}
           {/* <ApiAxios/> */}
-          <ApolloClientGraphQL/>
+          {/* <ApolloClientGraphQL/> */}
+          <ApolloWithReact/>
         </header>
       </div>
     );
